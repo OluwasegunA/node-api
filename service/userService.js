@@ -1,14 +1,46 @@
 const User = require('../database/models/userModel');
+const constants = require('../constants');
+const { formatMongoData } = require('../helper/dbHelper');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
-module.exports.createUser = async (userData) => {
+
+module.exports.createUser = async ({name, email, phoneNumber, gender, password}) => {
     try{
-        let user = new User({ ...userData })
-        let result=  await user.save();
-        return result.toObject();
+        let user = await User.findOne({ email });
+        if(user){
+            throw new Error(constants.userMessage.DUPLICATE_USER);
+        }
+
+        password = await bcrypt.hash(password, 12);
+
+        const newUser = new User ({name, email, phoneNumber, gender, password});
+        let result = await newUser.save();
+        return formatMongoData(result);
+
     } catch (error){
         console.log('Something went wrong: Service: userController', error);
         throw new Error(error);
     }
 }
 
-    
+   
+module.exports.login = async ({name, email, phoneNumber, gender, password}) => {
+    try{
+        let user = await User.findOne({ email });
+        if(!user){
+            throw new Error(constants.userMessage.USER_NOT_FOUND);
+        }
+        const isValid = await bcrypt.compare(password, user.password);
+        if (!isValid) {
+            throw new Error (constants.userMessage.INVALID_LOGIN);
+        }
+        const token = jwt.sign({id:user._id }, process.env.SECRET_KEY || 'my_secret_key', {expiresIn: '1d'});
+
+        return {token}; 
+
+    } catch (error){
+        console.log('Something went wrong: Service: login', error);
+        throw new Error(error);
+    }
+}

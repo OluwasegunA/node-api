@@ -1,3 +1,6 @@
+const constants = require('../constants');
+const mongoose = require('mongoose');
+
 module.exports.formatMongoData = (data) => {
     if (Array.isArray(data)){
         let newDataList = [];
@@ -7,4 +10,10 @@ module.exports.formatMongoData = (data) => {
         return newDataList;
     }
     return data.toObject();
+}
+
+module.exports.chkObjectId = (id) => {
+    if(!mongoose.Types.ObjectId.isValid(id)){
+        throw new Error(constants.databaseMessage.INVALID_ID);
+    }
 }
