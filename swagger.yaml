@@ -213,8 +213,8 @@ definitions:
         type: string
         description: email of user
       phoneNumber:
-        type: number without the leading '0'
-        description: phone number of user
+        type: number 
+        description: phone number of user without the leading 0
       password:
         type: string
         description: password of the user
